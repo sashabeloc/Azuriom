@@ -1,10 +1,12 @@
 FROM ubuntu:22.04
 EXPOSE 80 443
+ARG DOMAIN
 
 # Install essential packages and dependencies
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y nginx zip curl lsb-release apt-transport-https ca-certificates software-properties-common && \
+    apt install certbot python3-certbot-nginx && \
     rm -rf /var/lib/apt/lists/*
 
 # Add PHP repository
@@ -30,6 +32,7 @@ RUN curl -sS https://getcomposer.org/installer -o composer-setup.php && \
 # Create working directory
 RUN mkdir -p /var/www/azuriom
 COPY nginx.conf /etc/nginx/sites-available/default
+RUN certbot certonly --nginx -d $DOMAIN
 COPY . /var/www/azuriom
 
 WORKDIR /var/www/azuriom
