@@ -32,6 +32,7 @@ RUN curl -sS https://getcomposer.org/installer -o composer-setup.php && \
 # Create working directory
 RUN mkdir -p /var/www/azuriom
 COPY nginx.conf /etc/nginx/sites-available/default
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
 RUN certbot certonly --nginx -d $DOMAIN
 COPY . /var/www/azuriom
 
@@ -50,4 +51,12 @@ RUN chmod 755 /var/www/azuriom && \
 # Change the directory owner to www-data
 RUN chown -R www-data:www-data /var/www/azuriom
 
-CMD service php8.2-fpm start && nginx -g 'daemon off;'
+CMD envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/sites-available/default &&service php8.2-fpm start && nginx -g 'daemon off;'    {{ if eq .Env.USE_SSL "true" }}
+    listen 443 ssl;
+    ssl_certificate /etc/nginx/ssl/${DOMAIN_NAME}.crt;
+    ssl_certificate_key /etc/nginx/ssl/${DOMAIN_NAME}.key;
+    {{ end }}    {{ if eq .Env.USE_SSL "true" }}
+    listen 443 ssl;
+    ssl_certificate /etc/nginx/ssl/${DOMAIN_NAME}.crt;
+    ssl_certificate_key /etc/nginx/ssl/${DOMAIN_NAME}.key;
+    {{ end }}
